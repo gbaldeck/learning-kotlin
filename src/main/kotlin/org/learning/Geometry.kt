@@ -6,16 +6,19 @@ package org.learning
 import java.util.Random
 
 class Rectangle(height: Int, val width: Int) {
-    val isSquare: Boolean
-        get() = height == width
+  val isSquare: Boolean
+    get() = height == width
 
-    private val height: Int = height
-        get() = field + 2 //using a backing field
+  private val height: Int = height
+    get() = field + 2 //using a backing field
 
-    fun whatsTheHeight() : Int = height;
+  fun whatsTheHeight(): Int = height;
 
 }
+
 fun createRandomRectangle(): Rectangle {
-    val random = Random()
-    return Rectangle(random.nextInt(), random.nextInt())
+  val random = Random()
+  val rec = Rectangle(random.nextInt(), random.nextInt())
+
+  return rec
 }
