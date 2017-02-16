@@ -28,3 +28,6 @@ fun binaryReps() {
 
 fun isLetter(c: Char) = c in 'a'..'z' || c in 'A'..'Z'
 fun isNotDigit(c: Char) = c !in '0'..'9'
+fun inSet(c: Char) = c in setOf('k','t')
+fun inBetween(c: String) = c in "Java".."Scala" //checks if c is in alphabetical order between Java and Scala because
+//the String class implements the Comparable interface that compares by alphabetical order
