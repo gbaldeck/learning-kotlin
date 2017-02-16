@@ -47,4 +47,38 @@ fun main(args: Array<String>) {
   println(sb)
 
   printStuff("value one", "two", "seven", "twenty four")
+
+  // 'to' is actually an infix function, not a reserved construct
+  val tempMap = mapOf(1 to "one", 7 to "seven", 53 to "fifty-three")
+
+  val (number, name) = 1 to "one" //returns a Pair(1, "one") and assigns 1 to 'number' and "one" to 'name'
+  //This portion 'val (number, name) =...' is called the destructuring declaration and works with more than just pairs
+
+  //Using my custom infix function. this is syntactic sugar for 1.plus(5)
+  println(1 plus 5)
+
+  //Kotlin stdlib regex! this is awesome!
+  println("12.345-6.A".split("\\.|-".toRegex()))
+
+  //Kotlin string helper functions
+  parsePath("/Users/yole/kotlin-book/chapter.adoc")
+
+  //How to use '$' in a triple quoted multiline string
+  println("""${'$'}99.9""")
+
+  //local functions
+  class User(val id: Int, val name: String, val address: String)
+
+  fun saveUser(user: User){
+
+    //local function
+    fun validate(user: User, value: String, fieldName: String){
+      if (value.isEmpty())
+        throw IllegalArgumentException("Can't save user ${user.id}: empty $fieldName")
+    }
+
+    validate(user, user.name, "Name")
+    validate(user, user.address, "Address")
+  }
+
 }

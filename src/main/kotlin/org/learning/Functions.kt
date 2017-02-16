@@ -51,3 +51,28 @@ fun <T> printStuff(vararg values: T) {
   val list = listOf("one final value", *values)
   list.forEach { value -> println(value) }
 }
+
+//custom infix function thats also an extension function. see it used in MainKt
+infix fun Int.plus(other: Int) = this + other
+
+//Kotlin string helper functions
+fun parsePath(path: String) {
+  val directory = path.substringBeforeLast("/")
+  val fullName = path.substringAfterLast("/")
+  val fileName = fullName.substringBeforeLast(".")
+  val extension = fullName.substringAfterLast(".")
+
+  println("Dir: $directory, name: $fileName, ext: $extension")
+}
+
+//Regex version of the above function
+//pg 62/89 for explanation
+fun parsePathRegex(path: String) {
+  //In a triple quoted string no characters need to be escaped
+  val regex = """(.+)/(.+)\.(.+)""".toRegex()
+  val matchResult = regex.matchEntire(path)
+  if (matchResult != null) {
+    val (directory, filename, extension) = matchResult.destructured
+    println("Dir: $directory, name: $filename, ext: $extension")
+  }
+}
