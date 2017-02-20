@@ -81,4 +81,13 @@ fun main(args: Array<String>) {
     validate(user, user.address, "Address")
   }
 
+  ButtonOne().click()
+  ButtonOne().showOff()
+
+  val alice = User("Alice")
+  println(alice.isSubscribed)
+  val bob = User("Bob", false)
+  println(bob.isSubscribed)
+  val carol = User("Carol", isSubscribed = false)
+  println(carol.isSubscribed)
 }
