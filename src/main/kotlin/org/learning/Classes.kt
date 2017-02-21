@@ -179,5 +179,62 @@ class LengthCounter{
 
   fun addWord(word: String){
     counter += word.length
+
+    //The == operator calls .equals under the hood
+    LengthCounter() == LengthCounter()
+
+    //The === operator compares the references of the two objects
+    LengthCounter() === LengthCounter()
+  }
+}
+
+class Client(val name: String, val postalCode: Int) {
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other !is Client)
+      return false
+    return name == other.name &&
+        postalCode == other.postalCode
+  }
+  override fun toString() = "Client(name=$name, postalCode=$postalCode)"
+  override fun hashCode(): Int = name.hashCode() * 31 + postalCode
+
+  fun copy(name: String = this.name, postalCode: Int = this.postalCode) = Client(name, postalCode)
+}
+
+//creating a data class automatically override equals, hashCode, and toString
+//The equals and hashCode methods take into account all the properties declared in the primary constructor
+//try to keep dataclasses immutable by using val
+//use the generated copy method to create a new instance with different values
+data class ClientData(val name: String, val postalCode: Int)
+
+//this creates a decorator pattern object, see pg 91/118
+class DelegatingCollection<T>(innerList: Collection<T> = ArrayList<T>()) : Collection<T> by innerList{}
+
+//the by keyword tells the class to implement the interfaces methods by calling the same methods on innerSet
+//This is possible since innerSet is also a MutableCollection
+//then those same functions can be overridden as needed
+class CountingSet<T>(val innerSet: MutableCollection<T> = HashSet<T>()) : MutableCollection<T> by innerSet {
+  var objectsAdded = 0
+  override fun add(element: T): Boolean {
+    objectsAdded++
+    return innerSet.add(element)
+  }
+  override fun addAll(c: Collection<T>): Boolean {
+    objectsAdded += c.size
+    return innerSet.addAll(c)
+  }
+}
+
+//The object keyword. Objects are classes that are singletons
+//The object keyword defines a class and a variable of that class in a single statement
+//an object has no constructor because it is initialized immediately
+//dependency injection is still the better option because it allows constructors
+object Payroll {
+  val allEmployees = arrayListOf<Any>()
+
+  fun calculateSalary(){
+    for (person in allEmployees){
+
+    }
   }
 }

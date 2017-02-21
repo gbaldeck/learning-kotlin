@@ -90,4 +90,12 @@ fun main(args: Array<String>) {
   println(bob.isSubscribed)
   val carol = User("Carol", isSubscribed = false)
   println(carol.isSubscribed)
+
+  //data classes
+  val bob1 = Client("Bob", 973293)
+  println(bob1.copy(postalCode = 382555))
+
+  //Objects can be used like this
+  Payroll.allEmployees.add(Any())
+  Payroll.calculateSalary()
 }
