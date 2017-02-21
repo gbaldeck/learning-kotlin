@@ -115,3 +115,69 @@ open class User constructor(_nickname: String, val isSubscribed: Boolean = true)
 class TwitterUser(nickname: String) : User(nickname){
 
 }
+
+open class Vue {
+  constructor(ctx: Any){
+
+  }
+  constructor(ctx: Any, attr: Any){
+
+  }
+}
+
+class MyButton : Vue {
+  constructor(ctx: Any) : super(ctx){}
+  constructor(ctx: Any, attr: Any) : super(ctx, attr){}
+
+  //calls a constructor in the same class
+  constructor() : this(Any())
+}
+
+interface ItsAUser{
+  //abstract property. Implementing classes must initialize nickname with a value
+  val nickname: String
+}
+
+class PrivateUser(override val nickname: String) : ItsAUser
+
+class SubscribingUser(val email: String) : ItsAUser{
+  override val nickname: String
+    get() = email.substringBefore('@')
+}
+
+class FacebookUser(val accountId: Int) : ItsAUser{
+  override val nickname: String = getFacebookName(accountId)
+
+  private fun getFacebookName(accountId: Int): String{
+    return ""
+  }
+}
+
+interface NoBackingField{
+  val email: String
+
+  //this is possible because no backing field is referenced
+  //this can be inherited in classes that implement NoBackingField
+  val nickname: String
+    get() = email.substringBefore('@')
+}
+
+//If you provide custom accessor implementations that don’t use field (for the
+//getter if the property is a val and for both accessors if it’s a mutable property), the
+//backing field won’t be present.
+class BackingFieldUser(val name: String){
+  var address: String = "unspecified"
+    set(value: String) {
+      println("Address was changed for $name: \"$field\" -> \"$value\".")
+      field = value
+    }
+}
+
+class LengthCounter{
+  var counter: Int = 0
+    private set
+
+  fun addWord(word: String){
+    counter += word.length
+  }
+}
