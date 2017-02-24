@@ -104,7 +104,7 @@ fun evalTwo(e: ExprTwo): Int =
 class SumSum() : ExprTwo()
 
 //in the primary constructor the constructor keywork is required if you're using annotations
-open class User constructor(_nickname: String, val isSubscribed: Boolean = true){
+open class User constructor(_nickname: String, val isSubscribed: Boolean = true, val age: Int = 0){
   val nickname: String
 
   init {
