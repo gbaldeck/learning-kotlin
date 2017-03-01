@@ -1,5 +1,7 @@
 package org.learning
 
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.io.Serializable
 
 /**
@@ -237,4 +239,56 @@ object Payroll {
 
     }
   }
+}
+
+
+//Objects can be defined inside a class and then accessed like ObjectInside.InternalObject.name
+class ObjectInside {
+  object InternalObject {
+    val name = "Jobe"
+  }
+}
+
+//Factory pattern with companion object
+//Companion objects are different than an object defined in a class in that
+//you can access its member like static functions and variable on the class
+class NextUser private constructor(val nickname: String) {
+  companion object {
+    fun newSubscribingUser(email: String) = User(email.substringBefore('@'))
+    fun newFacebookUser(accountId: Int) = User(accountId.toString())
+  }
+}
+
+//Extension function on a companion object. It can then be used like a normal companion object function on the class
+//I didn't give the companion object a name so it can be referred to by Companion
+//I can give it a name like 'companion object CompanionOne' in its declaration
+fun NextUser.Companion.printHello() {
+  println("Hello!")
+}
+
+object Window{
+  fun addMouseListener(listener: MouseAdapter){}
+}
+
+//This shows how to use object to create an anonymous class that extends MouseAdapter()
+fun createMouseListener(){
+  Window.addMouseListener(
+      object : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent){}
+        override fun mouseEntered(e: MouseEvent?) {}
+      }
+  )
+}
+
+//closure with anonymous object
+fun countClicks(window : Window){
+  var clickCount = 0
+
+  window.addMouseListener(
+      object : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent?) {
+          clickCount++ //click count is in the closure
+        }
+      }
+  )
 }

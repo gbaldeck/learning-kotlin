@@ -1,5 +1,7 @@
 package org.learning
 
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import org.learning.lastChar as last //giving the function a different name in this file
 
 /**
@@ -98,4 +100,11 @@ fun main(args: Array<String>) {
   //Objects can be used like this
   Payroll.allEmployees.add(Any())
   Payroll.calculateSalary()
+
+  //Object inside a class usage
+  println(ObjectInside.InternalObject.name)
+
+  //Companion Object usage
+  NextUser.newFacebookUser(5)
+
 }
