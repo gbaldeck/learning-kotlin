@@ -7,6 +7,7 @@ package org.learning
 //pg. 107/134 for how lambda syntax works in arguments
 fun findTheOldestAllTheShortcuts(people : List<User>) = println(people.maxBy(User::age))
 
+//the it keyword is generated only if no parameter in the lambda is specified
 fun findTheOldestKindaShortcuts(people : List<User>) = println(people.maxBy{ it.age })
 
 fun findTheOldestOneShortcut(people : List<User>) = println(people.maxBy{ p -> p.age })
@@ -30,3 +31,7 @@ fun myJoinToString(){
 
   val namesWithLambdaOutside = people.joinToString(" ") { it.nickname }
 }
+
+//outer variables can be accessed in the lambda scope
+fun printMessagesWithPrefix(messages: Collection<String>, prefix: String) =
+  messages.forEach { "$prefix $it" }
