@@ -35,3 +35,49 @@ fun myJoinToString(){
 //outer variables can be accessed in the lambda scope
 fun printMessagesWithPrefix(messages: Collection<String>, prefix: String) =
   messages.forEach { "$prefix $it" }
+
+fun memberReferences(){
+  //this is the same as ...
+  val getAge = { user: User -> user.age }
+
+  //...this
+  val getAgeRef = User::age
+
+  //functions outside of classes can be referenced as well
+  fun salute() = println("Salute!")
+  val saluteNow = ::salute
+}
+
+data class TempPerson(val name: String, val age: Int)
+
+fun constructorReferences(){
+  //this stores the action of creating an instance of a class in a variable
+  val createPerson = ::TempPerson
+  val person = createPerson("Alice", 29)
+
+  //extension functions can be referenced the same way
+  fun TempPerson.isAdult() = age >= 21
+  val isAdult = TempPerson::isAdult
+
+  //bound member reference for a specific instance
+  val p = TempPerson("Dmitry", 34)
+  val dmitrysAgeFunction = p::age
+  dmitrysAgeFunction() //will return 34
+}
+
+fun functionalProgramming(){
+  val list = listOf(1, 2, 3, 4)
+  println(list.filter { it % 2 == 0 })
+  println(list.map { it * it })
+
+  //chaining
+  val people = listOf(TempPerson("Alice", 29), TempPerson("Jobe", 73))
+  println(people.filter { it.age > 30 }.map(TempPerson::name))
+
+  //this performs the maxBy function for every person in the collection! (no good)
+  people.filter { it.age == people.maxBy(TempPerson::age)?.age }
+
+  //this performs maxBy once! (good)
+  val maxAge = people.maxBy(TempPerson::age)?.age
+  people.filter { it.age == maxAge }
+}
