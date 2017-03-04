@@ -1,5 +1,9 @@
 package org.learning
 
+import javafx.event.EventHandler
+import javafx.scene.control.Button
+import javafx.scene.input.MouseEvent
+
 /**
  * Created by gramb on 2/23/2017.
  */
@@ -140,4 +144,70 @@ fun sequences(){
   val naturalNumbers = generateSequence(0) { it + 1 }
   val numbersTo100 = naturalNumbers.takeWhile { it <= 100 }
   numbersTo100.sum() //evaluated here, the above expressions are lazy
+}
+
+fun javaFunctionalInterfaces(){
+  val button = Button()
+  //a functional interface is an interface with only one abstract method
+  //functional interfaces can be swapped out for a lambda
+  //setOnMouseClicked takes a functional interface as a parameter, so we replace it with a lambda
+  button.setOnMouseClicked { view -> "do stuff" }
+
+  //this does the same thing, but a new object is created on each invocation
+  //if the above lambda is not a closure, it will not create multiple instances, only one
+  button.setOnMouseClicked(object : EventHandler<MouseEvent> {
+    override fun handle(event: MouseEvent?) {
+      TODO("not implemented")
+    }
+  })
+
+  //this is made into a global variable since it isn't using a closure
+  //It is called a SAM constructor. It is a functional interface that has a lamda passed into it
+  //And it can be stored in a variable or used when automatic conversion of the lambda to the functional
+  //interface isn't possible
+  val eventHandler = EventHandler<MouseEvent> { println(42) }
+
+  //The listener variable is a SAM constuctor that can be used multiple times
+  //since it is a closure it will have multiple instances created on each invocation
+  //note that there is no "this" in lambdas, "this" in a lambda refers to its enclosing object
+  //anonymous objects do have "this"
+  val button2 = Button()
+  val listener = EventHandler<MouseEvent> {
+    view ->
+      val text = when (view.button) {
+        button -> "First Button"
+        button2 -> "Second button"
+        else -> "Unknown button"
+      }
+      println(text)
+  }
+
+  button.setOnMouseClicked(listener)
+  button2.setOnMouseClicked(listener)
+
+  fun alphabetWith(): String {
+    return with(StringBuilder()) { //with runs the passed in lambda on the receiver (first parameter)
+      for(letter in 'A'..'Z'){
+        this.append(letter) //the receiver can be referred to as "this" or it can be omitted like below
+      }
+      append("\nNow I know the alphabet!") //this is the same as this.append(...)
+      toString()
+
+      //imagine the alphabet function is a method of the class OuterClass
+      //and OuterClass has its own toString() method.
+      //If you need to access the toString() method on outer class instead of StringBuilder
+      //you would do it by using a label like this:
+      //this@OuterClass.toString()
+    }
+  }
+
+  //apply is different from with in that it always returns the receiver
+  //instead of the last expression of the lambda
+  //Apply is useful for initializing properties on a newly constructed object right away
+  fun alphabetApply() = StringBuilder().apply {
+    for(letter in 'A'..'Z'){
+      append(letter)
+    }
+    append("\nNow I know the alphabet!")
+  }.toString()
 }

@@ -284,6 +284,7 @@ fun createMouseListener(){
 fun countClicks(window : Window){
   var clickCount = 0
 
+  //since it is an anonymous object it is recreated on each invocation
   window.addMouseListener(
       object : MouseAdapter() {
         override fun mouseClicked(e: MouseEvent?) {
