@@ -107,4 +107,5 @@ fun main(args: Array<String>) {
   //Companion Object usage
   NextUser.newFacebookUser(5)
 
+  theLetFun()
 }
