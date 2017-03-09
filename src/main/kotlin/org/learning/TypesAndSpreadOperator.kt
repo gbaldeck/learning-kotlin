@@ -116,3 +116,47 @@ fun nullabilityAndCollections(){
     println("Invalid numbers: ${numbers.size - validNumbers.size}")
   }
 }
+
+fun mutableAndReadonlyCollections() {
+  //this collection is read only (has not modifier functions) because it uses the Collection interface
+  val collection: Collection<Int> = mutableListOf(1, 2, 3)
+
+  //This casts collection as a mutable collection and now it is modifiable
+  val mutableCollection = collection as MutableCollection<Int>
+
+  //When creating a collection that can be modified always use the mutable version
+  //like 'mutableListOf' instead of the immutable version 'listOf'
+  //future versions of Kotlin may make 'listOf', 'mapOf', etc. truly immutable
+}
+
+fun arrays(){
+
+  fun main(args: Array<String>) {
+    for (i in args.indices) {
+      println("Argument $i is: ${args[i]}")
+    }
+  }
+
+  //initialize each element in an array with a lambda or use arrayOf.
+  //here the index of the array is passed into the lambda as i
+  val letters = Array<String>(26) { i -> ('a' + i).toString() }
+
+  //arrayOfNulls creates an array containing the specified number of nulls
+  val arrNulls = arrayOfNulls<Int?>(5) //the element type must be nullable
+
+  val strings = listOf("a", "b", "c")
+
+  //here the spread operator * is used for varargs and the strings collection is converted to an array
+  println("%s/%s/%s".format(*strings.toTypedArray()))
+
+  //to create arrays with a primitive type you must used the corresponding types array pg. 168/195
+  val intArr = IntArray(20) { i -> i+1 };
+  val intArrOf = intArrayOf(1, 2, 3)
+
+  //use forEachIndexed to get the index as well as the element
+  fun mainForEach(args: Array<String>) {
+    args.forEachIndexed { index, element ->
+      println("Argument $index is: $element")
+    }
+  }
+}
