@@ -172,7 +172,7 @@ operator fun Rect.rangeTo(obj: Rect) : ClosedRange<Rect>?{
 //for using the 'in' operator in a for loop e.g. for(x in "hello there")
 //use the iterator method
 operator fun ClosedRange<LocalDate>.iterator(): Iterator<LocalDate> =
-    object : Iterator<LocalDate> { //the object implements an Iteraotr over LocalDate elements
+    object : Iterator<LocalDate> { //the object implements an Iterator over LocalDate elements
       var current = start
 
       override fun hasNext() = current <= endInclusive //note the compareTo convention used for dates.
@@ -186,4 +186,42 @@ fun test6(){
   val newYear = LocalDate.ofYearDay(2017, 1) //first day of the year
   val daysOff = newYear.minusDays(1)..newYear //creates the ClosedRange (last value is included)
   for (dayOff in daysOff) { println(dayOff) } //prints newYear-1 and newYear
+}
+
+fun destructuringDeclarations(){
+  //for destructuring declarations like
+  val p = Point(10, 20)
+  val (x, y) = p
+  //functions on the class called componentN() are called, for example component1(), component2()...
+  //each componentN function maps to the position of the variable in the destructuring declaration
+
+  //data classes like Point declared above have pre-generated operator componentN() functions for every
+  //property declared in the primary constructor
+  class PointDes(val x: Int, val y: Int) {
+    operator fun component1() = x
+    operator fun component2() = y
+  }
+
+  //destructuring declaration is useful for returning multiple values from a function
+  //first define a container for the values like the class below
+  data class NameComponents(val name: String, val extension: String)
+
+  //return the container from the function
+  fun splitFilename(fullName: String): NameComponents {
+    val result = fullName.split('.', limit = 2)
+    return NameComponents(result[0], result[1])
+  }
+
+  //and use destructuring declaration to get the values
+  val (name, ext) = splitFilename("example.kt")
+
+  //componentN functions are also defined on arrays and collections
+  //destructuring declaration only works on the first 5 elements of the container
+
+  //destructuring declarations work great in loops
+  fun printEntries(map: Map<String, String>) {
+    for ((key, value) in map) {
+      println("$key -> $value")
+    }
+  }
 }
