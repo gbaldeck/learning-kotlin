@@ -167,7 +167,7 @@ fun javaFunctionalInterfaces(){
   //interface isn't possible
   val eventHandler = EventHandler<MouseEvent> { println(42) }
 
-  //The listener variable is a SAM constuctor that can be used multiple times
+  //The listener variable is a SAM constructor that can be used multiple times
   //since it is a closure it will have multiple instances created on each invocation
   //note that there is no "this" in lambdas, "this" in a lambda refers to its enclosing object
   //anonymous objects do have "this"
