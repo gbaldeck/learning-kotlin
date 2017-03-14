@@ -28,3 +28,8 @@ fun String.filter(predicate: (Char) -> Boolean): String {
   }
   return sb.toString()
 }
+
+fun test9(){
+  println("ab1c".filter { it in 'a'..'z' }) //prints "abc"
+}
+
