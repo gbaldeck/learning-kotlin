@@ -58,3 +58,76 @@ fun testJoinToString(){
   println(letters.joinToString(separator = "! ", postfix = "! ", transform = { it.toUpperCase() }))
   // above prints ALPHA! BETA!
 }
+
+//another way using nullability
+fun <T> Collection<T>.joinTooString(
+    separator: String = ", ",
+    prefix: String = "",
+    postfix: String = "",
+    transform: ((T) -> String)? = null //nullable function type
+): String {
+  val result = StringBuilder(prefix)
+  for ((index, element) in this.withIndex()) {
+    if (index > 0) result.append(separator)
+    //(if transform is null return null else transform.invoke()) is null return element.toString()
+    val str = transform?.invoke(element) ?: element.toString()
+    result.append(str)
+  }
+  result.append(postfix)
+  return result.toString()
+}
+
+//this returns a function from a function
+enum class Delivery { STANDARD, EXPEDITED }
+
+class Order(val itemCount: Int)
+
+fun getShippingCostCalculator(delivery: Delivery): (Order) -> Double {
+  if (delivery == Delivery.EXPEDITED) {
+    return { order -> 6 + 2.1 * order.itemCount }
+  }
+  return { order -> 1.2 * order.itemCount }
+}
+
+fun testDelivery(){
+  val calculator = getShippingCostCalculator(Delivery.EXPEDITED)
+
+  println("Shipping costs ${calculator(Order(3))}")
+  //prints Shipping costs 12.3
+}
+
+//awesome use of functions, study this
+fun contactList(){
+  data class Person(
+      val firstName: String,
+      val lastName: String,
+      val phoneNumber: String?
+  )
+
+  class ContactListFilters {
+    var prefix: String = ""
+    var onlyWithPhoneNumber: Boolean = false
+
+    fun getPredicate(): (Person) -> Boolean {
+      val startsWithPrefix = { p: Person ->
+        p.firstName.startsWith(prefix) || p.lastName.startsWith(prefix)
+      }
+      if (!onlyWithPhoneNumber) {
+        return startsWithPrefix
+      }
+      return { startsWithPrefix(it)
+          && it.phoneNumber != null }
+    }
+  }
+
+  val contacts = listOf(Person("Dmitry", "Jemerov", "123-4567"), Person("Svetlana", "Isakova", null))
+  val contactListFilters = ContactListFilters()
+
+  with (contactListFilters) { //notice use of with, similar to apply but doesn't return the object
+    prefix = "Dm"
+    onlyWithPhoneNumber = true
+  }
+
+  println(contacts.filter(contactListFilters.getPredicate()))
+  // prints [Person(firstName=Dmitry, lastName=Jemerov, phoneNumber=123-4567)]
+}
