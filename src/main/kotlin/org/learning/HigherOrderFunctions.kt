@@ -33,3 +33,28 @@ fun test9(){
   println("ab1c".filter { it in 'a'..'z' }) //prints "abc"
 }
 
+//Default parameter value is a lambda
+fun <T> Collection<T>.joinToString(
+  separator: String = ", ",
+  prefix: String = "",
+  postfix: String = "",
+  transform: (T) -> String = { it.toString() } //this default parameter is a lambda
+): String {
+  val result = StringBuilder(prefix)
+  for ((index, element) in this.withIndex()) { //notice the withIndex() function
+    if (index > 0) result.append(separator)
+    result.append(transform(element)) //calls the transform lambda
+  }
+  result.append(postfix)
+  return result.toString()
+}
+
+fun testJoinToString(){
+  val letters = listOf("Alpha", "Beta")
+  println(letters.joinToString())
+  // above prints Alpha, Beta
+  println(letters.joinToString { it.toLowerCase() })
+  // above prints alpha, beta
+  println(letters.joinToString(separator = "! ", postfix = "! ", transform = { it.toUpperCase() }))
+  // above prints ALPHA! BETA!
+}
