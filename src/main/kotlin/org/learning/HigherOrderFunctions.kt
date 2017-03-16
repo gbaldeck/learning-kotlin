@@ -29,7 +29,7 @@ fun String.filter(predicate: (Char) -> Boolean): String {
   return sb.toString()
 }
 
-fun test9(){
+fun test9() {
   println("ab1c".filter { it in 'a'..'z' }) //prints "abc"
 }
 
@@ -49,7 +49,7 @@ fun <T> Collection<T>.joinToString(
   return result.toString()
 }
 
-fun testJoinToString(){
+fun testJoinToString() {
   val letters = listOf("Alpha", "Beta")
   println(letters.joinToString())
   // above prints Alpha, Beta
@@ -61,10 +61,10 @@ fun testJoinToString(){
 
 //another way using nullability
 fun <T> Collection<T>.joinTooString(
-    separator: String = ", ",
-    prefix: String = "",
-    postfix: String = "",
-    transform: ((T) -> String)? = null //nullable function type
+  separator: String = ", ",
+  prefix: String = "",
+  postfix: String = "",
+  transform: ((T) -> String)? = null //nullable function type
 ): String {
   val result = StringBuilder(prefix)
   for ((index, element) in this.withIndex()) {
@@ -89,7 +89,7 @@ fun getShippingCostCalculator(delivery: Delivery): (Order) -> Double {
   return { order -> 1.2 * order.itemCount }
 }
 
-fun testDelivery(){
+fun testDelivery() {
   val calculator = getShippingCostCalculator(Delivery.EXPEDITED)
 
   println("Shipping costs ${calculator(Order(3))}")
@@ -97,11 +97,11 @@ fun testDelivery(){
 }
 
 //awesome use of functions, study this
-fun contactList(){
+fun contactList() {
   data class Person(
-      val firstName: String,
-      val lastName: String,
-      val phoneNumber: String?
+    val firstName: String,
+    val lastName: String,
+    val phoneNumber: String?
   )
 
   class ContactListFilters {
@@ -115,19 +115,69 @@ fun contactList(){
       if (!onlyWithPhoneNumber) {
         return startsWithPrefix
       }
-      return { startsWithPrefix(it)
-          && it.phoneNumber != null }
+      return {
+        startsWithPrefix(it)
+          && it.phoneNumber != null
+      }
     }
   }
 
   val contacts = listOf(Person("Dmitry", "Jemerov", "123-4567"), Person("Svetlana", "Isakova", null))
   val contactListFilters = ContactListFilters()
 
-  with (contactListFilters) { //notice use of with, similar to apply but doesn't return the object
+  with(contactListFilters) {
+    //notice use of with, similar to apply but doesn't return the object
     prefix = "Dm"
     onlyWithPhoneNumber = true
   }
 
   println(contacts.filter(contactListFilters.getPredicate()))
   // prints [Person(firstName=Dmitry, lastName=Jemerov, phoneNumber=123-4567)]
+}
+
+enum class OS { WINDOWS, LINUX, MAC, IOS, ANDROID }
+
+//using lambdas to remove duplication
+fun removeCodeDups() {
+  data class SiteVisit(
+    val path: String,
+    val duration: Double,
+    val os: OS
+  )
+
+  val log = listOf(
+    SiteVisit("/", 34.0, OS.WINDOWS),
+    SiteVisit("/", 22.0, OS.MAC),
+    SiteVisit("/login", 12.0, OS.WINDOWS),
+    SiteVisit("/signup", 8.0, OS.IOS),
+    SiteVisit("/", 16.3, OS.ANDROID)
+  )
+
+  val averageWindowsDuration = log.filter { it.os == OS.WINDOWS }
+    .map(SiteVisit::duration).average()
+
+  //if you need to calculate the same statistics for MAC users you can improve readability
+  //and avoid duplication by extracting the os as a parameter in an extension function
+  fun List<SiteVisit>.averageDurationForSingle(os: OS) =
+    filter { it.os == os }.map(SiteVisit::duration).average()
+
+  println(log.averageDurationForSingle(OS.WINDOWS))
+  //prints 23.0
+  println(log.averageDurationForSingle(OS.MAC))
+  //prints 22.0
+
+  //more complex because of set
+  val averageMobileDuration = log.filter { it.os in setOf(OS.IOS, OS.ANDROID) }
+    .map(SiteVisit::duration).average()
+
+  //now a simple parameter representing the os doesn't do the job
+  //so pass in a lambda instead
+  fun List<SiteVisit>.averageDurationFor(predicate: (SiteVisit) -> Boolean) =
+    filter(predicate).map(SiteVisit::duration).average()
+
+  //since the lambda's parameter and return type are defined above those types can be inferred here
+  println(log.averageDurationFor { it.os in setOf(OS.ANDROID, OS.IOS) })
+  //prints 12.15
+  println(log.averageDurationFor { it.os == OS.IOS && it.path == "/signup" })
+  //prints 8.0
 }
