@@ -215,7 +215,7 @@ fun __foo__(l: Lock) {
   //start - body of synchronized function
   l.lock()
   try {
-    println("Action") //the action parameter is inlined here
+    println("Action") //notice the lambda parameter is inlined here as well
   } finally {
     l.unlock()
   }
