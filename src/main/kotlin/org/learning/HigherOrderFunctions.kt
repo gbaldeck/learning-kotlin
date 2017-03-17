@@ -1,5 +1,7 @@
 package org.learning
 
+import sun.misc.Lock
+
 /**
  * Created by gbaldeck on 3/13/2017.
  */
@@ -29,16 +31,16 @@ fun String.filter(predicate: (Char) -> Boolean): String {
   return sb.toString()
 }
 
-fun test9(){
+fun test9() {
   println("ab1c".filter { it in 'a'..'z' }) //prints "abc"
 }
 
 //Default parameter value is a lambda
 fun <T> Collection<T>.joinToString(
-  separator: String = ", ",
-  prefix: String = "",
-  postfix: String = "",
-  transform: (T) -> String = { it.toString() } //this default parameter is a lambda
+    separator: String = ", ",
+    prefix: String = "",
+    postfix: String = "",
+    transform: (T) -> String = { it.toString() } //this default parameter is a lambda
 ): String {
   val result = StringBuilder(prefix)
   for ((index, element) in this.withIndex()) { //notice the withIndex() function
@@ -49,7 +51,7 @@ fun <T> Collection<T>.joinToString(
   return result.toString()
 }
 
-fun testJoinToString(){
+fun testJoinToString() {
   val letters = listOf("Alpha", "Beta")
   println(letters.joinToString())
   // above prints Alpha, Beta
@@ -89,7 +91,7 @@ fun getShippingCostCalculator(delivery: Delivery): (Order) -> Double {
   return { order -> 1.2 * order.itemCount }
 }
 
-fun testDelivery(){
+fun testDelivery() {
   val calculator = getShippingCostCalculator(Delivery.EXPEDITED)
 
   println("Shipping costs ${calculator(Order(3))}")
@@ -97,7 +99,7 @@ fun testDelivery(){
 }
 
 //awesome use of functions, study this
-fun contactList(){
+fun contactList() {
   data class Person(
       val firstName: String,
       val lastName: String,
@@ -115,19 +117,62 @@ fun contactList(){
       if (!onlyWithPhoneNumber) {
         return startsWithPrefix
       }
-      return { startsWithPrefix(it)
-          && it.phoneNumber != null }
+      return {
+        startsWithPrefix(it)
+            && it.phoneNumber != null
+      }
     }
   }
 
   val contacts = listOf(Person("Dmitry", "Jemerov", "123-4567"), Person("Svetlana", "Isakova", null))
   val contactListFilters = ContactListFilters()
 
-  with (contactListFilters) { //notice use of with, similar to apply but doesn't return the object
+  with(contactListFilters) {
+    //notice use of with, similar to apply but doesn't return the object
     prefix = "Dm"
     onlyWithPhoneNumber = true
   }
 
   println(contacts.filter(contactListFilters.getPredicate()))
   // prints [Person(firstName=Dmitry, lastName=Jemerov, phoneNumber=123-4567)]
+}
+
+
+//by using the inline keyword the body of the function is "inlined"
+//or substituted into the places where the function is called instead of
+//being invoked through the normal process. This is much more efficient
+inline fun <T> synchronized(lock: Lock, action: () -> T): T {
+  lock.lock()
+  try {
+    return action()
+  } finally {
+    lock.unlock()
+  }
+}
+
+//normal coding, before the inline process happens
+fun foo(l: Lock) {
+  println("Before sync")
+
+  synchronized(l) {
+    println("Action")
+  }
+
+  println("After sync")
+}
+
+//the generated code after the inline process happens
+fun __foo__(l: Lock) {
+  println("Before sync")
+
+  //start - body of synchronized function
+  l.lock()
+  try {
+    println("Action") //the action parameter is inlined here
+  } finally {
+    l.unlock()
+  }
+  //end - body of synchronized function
+
+  println("After sync")
 }
