@@ -1,6 +1,8 @@
 package org.learning
 
 import sun.misc.Lock
+import java.io.BufferedReader
+import java.io.FileReader
 
 /**
  * Created by gbaldeck on 3/13/2017.
@@ -37,10 +39,10 @@ fun test9() {
 
 //Default parameter value is a lambda
 fun <T> Collection<T>.joinToString(
-    separator: String = ", ",
-    prefix: String = "",
-    postfix: String = "",
-    transform: (T) -> String = { it.toString() } //this default parameter is a lambda
+  separator: String = ", ",
+  prefix: String = "",
+  postfix: String = "",
+  transform: (T) -> String = { it.toString() } //this default parameter is a lambda
 ): String {
   val result = StringBuilder(prefix)
   for ((index, element) in this.withIndex()) { //notice the withIndex() function
@@ -119,7 +121,7 @@ fun contactList() {
       }
       return {
         startsWithPrefix(it)
-            && it.phoneNumber != null
+          && it.phoneNumber != null
       }
     }
   }
@@ -142,26 +144,26 @@ enum class OS { WINDOWS, LINUX, MAC, IOS, ANDROID }
 //using lambdas to remove duplication
 fun removeCodeDups() {
   data class SiteVisit(
-      val path: String,
-      val duration: Double,
-      val os: OS
+    val path: String,
+    val duration: Double,
+    val os: OS
   )
 
   val log = listOf(
-      SiteVisit("/", 34.0, OS.WINDOWS),
-      SiteVisit("/", 22.0, OS.MAC),
-      SiteVisit("/login", 12.0, OS.WINDOWS),
-      SiteVisit("/signup", 8.0, OS.IOS),
-      SiteVisit("/", 16.3, OS.ANDROID)
+    SiteVisit("/", 34.0, OS.WINDOWS),
+    SiteVisit("/", 22.0, OS.MAC),
+    SiteVisit("/login", 12.0, OS.WINDOWS),
+    SiteVisit("/signup", 8.0, OS.IOS),
+    SiteVisit("/", 16.3, OS.ANDROID)
   )
 
   val averageWindowsDuration = log.filter { it.os == OS.WINDOWS }
-      .map(SiteVisit::duration).average()
+    .map(SiteVisit::duration).average()
 
   //if you need to calculate the same statistics for MAC users you can improve readability
   //and avoid duplication by extracting the os as a parameter in an extension function
   fun List<SiteVisit>.averageDurationForSingle(os: OS) =
-      filter { it.os == os }.map(SiteVisit::duration).average()
+    filter { it.os == os }.map(SiteVisit::duration).average()
 
   println(log.averageDurationForSingle(OS.WINDOWS))
   //prints 23.0
@@ -170,12 +172,12 @@ fun removeCodeDups() {
 
   //more complex because of set
   val averageMobileDuration = log.filter { it.os in setOf(OS.IOS, OS.ANDROID) }
-      .map(SiteVisit::duration).average()
+    .map(SiteVisit::duration).average()
 
   //now a simple parameter representing the os doesn't do the job
   //so pass in a lambda instead
   fun List<SiteVisit>.averageDurationFor(predicate: (SiteVisit) -> Boolean) =
-      filter(predicate).map(SiteVisit::duration).average()
+    filter(predicate).map(SiteVisit::duration).average()
 
   //since the lambda's parameter and return type are defined above those types can be inferred here
   println(log.averageDurationFor { it.os in setOf(OS.ANDROID, OS.IOS) })
@@ -223,3 +225,136 @@ fun __foo__(l: Lock) {
 
   println("After sync")
 }
+
+//here a variable of a function is being passed into the
+//inlined function. In this case the lambda that the is stored in the
+//variable is not inlined. Only when a lambda with its body is passed in
+//directly does it get inlined.
+//For the lambda to be inlined the lambda's code body must be available at the site
+//where the inline function is called
+class LockOwner(val lock: Lock) {
+  //before inlining
+  fun runUnderLock(body: () -> Unit) {
+    synchronized(lock, body)
+  }
+
+  //after inlining
+  fun __runUnderLock__(body: () -> Unit) {
+    lock.lock()
+    try {
+      body()
+    } finally {
+      lock.unlock()
+    }
+  }
+}
+
+//pg. 213/240 Restrictions on Inline Functions
+//Generally, the parameter can be inlined if it's called directly or
+//passed as an argument to another inline function
+
+
+//use the noinline modifier when you do not what to inline one the lambdas
+inline fun foo(inlined: () -> Unit, noinline notInlined: () -> Unit) {
+// ...
+}
+
+//pg.215/242 using asSequence when chaining filter, map, etc. should only be used
+//for large collections because it does not allow inlining.
+
+//Do not use inlining everywhere, it is only beneficial to performance with functions
+//that take lambdas as arguments
+//pg. 216/243 You should still pay attention to the code size when deciding whether to use
+//the inline modifier. If the function you want to inline is large, copying its bytecode
+//into every call site could be expensive in terms of bytecode size.
+
+
+//the use function is an extension function called on a closable resource
+//it receives a lambda as an argument and ensures that the resource is closed
+//regardless of whether the lambda completes romally or throws an exception
+fun readFirstLineFromFile(path: String): String {
+  BufferedReader(FileReader(path)).use { br ->
+    return br.readLine() //this is a non-local return that returns a value from the readFirstLineFromFile function
+  }
+}
+
+/////Returning in lambdas
+
+fun lookForAliceLoop(people: List<Person>) {
+  for (person in people) {
+    if (person.name == "Alice") {
+      println("Found!")
+      return //in a for loop, returns normally
+    }
+  }
+  println("Alice is not found")
+}
+
+//If you use the return keyword in a lambda, it returns from the function in which you called
+//the lambda, not just from the lambda itself.
+//Note that the return from the outer function is possible only if the function that takes
+//the lambda as an argument is inlined.
+fun lookForAlice(people: List<Person>) {
+  people.forEach {
+    //since forEach is inlined, the return keyword works and returns from lookForAlice
+    if (it.name == "Alice") {
+      println("Found!")
+      return //"non-local return" - even though its in a lambda, the return statement still returns from lookForAlice
+    }
+  }
+  println("Alice is not found")
+}
+
+//Using the return expression in lambdas passed to non-inline functions isn’t allowed.
+
+//To return from lambdas use labels. You can label a lambda expression from which you
+//want to return, and then refer to this label after the return keyword
+fun lookForAliceLabel(people: List<Person>) {
+  people.forEach label@ {
+    if (it.name == "Alice") return@label
+  }
+  println("Alice might be somewhere")
+}
+
+//Alternatively, the name of the function that takes this lambda as an argument
+//can be use as a label.
+fun lookForAliceFunctionLabel(people: List<Person>) {
+  people.forEach {
+    if (it.name == "Alice") return@forEach //refers to the forEach function this lambda is passed to
+  }
+  println("Alice might be somewhere")
+}
+
+//Note that if you specify the label of the lambda expression explicitly, labeling using
+//the function name doesn’t work. A lambda expression can’t have more than one label.
+
+//pg. 220/247 Using labels with the 'this' keyword
+fun labelsWithThis() {
+  println(StringBuilder().apply sb@ {
+    listOf(1, 2, 3).apply {
+      this@sb.append(this.toString()) //'this' refers to the list and 'this@sb' refers to the StringBuilder instance
+    }
+  })
+}
+
+//Using the non-local return syntax can get verbose. The solution is an alternative syntax called anonymous functions
+
+//Anonymous functions: local returns by default
+
+fun lookForAliceAnonFunction(people: List<Person>) {
+  people.forEach(fun (person) { //uses the fun keyword to define an anonymous function
+    if (person.name == "Alice") return
+    println("${person.name} is not Alice")
+  })
+
+  people.filter(fun (person): Boolean { //return type must be explicitely defined
+    return person.name.length < 30 //returns from this function instead of having to use a label
+  })
+}
+
+//pg. 221/248
+//The rule is simple, 'return' returns from the closest function declared using the 'fun' keyword
+
+//Despite that an anonymous function looks like a regular function, it is actually a lambda.
+//In other words, it is another syntactic form of a lambda expression.
+//Therefor the inlining rules of lambdas also applies to anonymous functions.
