@@ -342,12 +342,12 @@ fun labelsWithThis() {
 //Anonymous functions: local returns by default
 
 fun lookForAliceAnonFunction(people: List<Person>) {
-  people.forEach(fun (person) { //uses the fun keyword to define an anonymous function
+  people.forEach(fun(person) { //uses the fun keyword to define an anonymous function
     if (person.name == "Alice") return
     println("${person.name} is not Alice")
   })
 
-  people.filter(fun (person): Boolean { //return type must be explicitely defined
+  people.filter(fun(person): Boolean { //return type must be explicitely defined
     return person.name.length < 30 //returns from this function instead of having to use a label
   })
 }
