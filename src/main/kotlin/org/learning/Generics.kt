@@ -17,8 +17,18 @@ fun taTest1() {
   val readers = mutableListOf<String>(/* ... */)
 
   //Declaration of filter extension function
-  //fun <T> List<T>.filter(predicate: (T) -> Boolean): List<T>
+  fun <T> List<T>.filter(predicate: (T) -> Boolean): List<T>? = null
 
   //Using the type argument and parameter T the type from the list is inferred as a String
   readers.filter { it !in authors }
+}
+
+//Generic extension property
+//pg. 226/253 note that Generic non-extension properties (just a normal property) are not possible
+val <T> List<T>.penultimate: T
+  get() = this[size - 2]
+
+fun genericExtensionProperty() {
+  println(listOf(1, 2, 3, 4).penultimate)
+  //prints 3
 }
