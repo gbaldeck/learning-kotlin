@@ -39,11 +39,11 @@ interface ExampleList<T> {
 // ...
 }
 
-class StringList: ExampleList<String> {
+class StringList : ExampleList<String> {
   override fun get(index: Int): String = "Hola"
 }
 
-//Now the generic type marameter T of ArrayList is a type argument for List
+//Now the generic type parameter T of ArrayList is a type argument for List
 class ExampleArrayList<T> : ExampleList<T> {
   override fun get(index: Int): T = index as T
 }
@@ -52,8 +52,10 @@ class ExampleArrayList<T> : ExampleList<T> {
 interface ExampleComparable<T> {
   fun compareTo(other: T): Int
 }
+
 class ExampleString : Comparable<ExampleString> {
-  override fun compareTo(other: ExampleString): Int = other as Int
+  //can do the greater than check below because both objects implement comparable
+  override fun compareTo(other: ExampleString): Int = if (this > other) 1 else 2
 }
 
 //Type parameter upper bounds <T : Number>
@@ -62,7 +64,7 @@ fun <T : Number> oneHalf(value: T): Double {
   return value.toDouble() / 2.0
 }
 
-fun <T: Comparable<T>> max(first: T, second: T): T {
+fun <T : Comparable<T>> max(first: T, second: T): T {
   //We can do the below check because first and second's upperbound is Comparable
   return if (first > second) first else second
 }
@@ -81,7 +83,7 @@ class ProcessorAnyorNull<T> {
   }
 }
 
-fun testProcOne(){
+fun testProcOne() {
   //As you can we use String? which is the nullable version of String
   val nullableStringProcessor = ProcessorAnyorNull<String?>()
   nullableStringProcessor.process(null)
@@ -103,7 +105,8 @@ fun typeIsCheck(value: Any) {
 }
 
 //Since Kotlin doesn't let you use a generic type without specifying type arguments
-//use the star projection * syntax
+//(meaning you have to specify the <TYPE> for a class or interface that is using generic type arguments)
+//So use the star projection * syntax
 fun typeIsStar(value: Any) {
   if (value is List<*>) { //Here the the generic type is replaced by the start projection syntax
     return
@@ -119,4 +122,58 @@ fun printSum(c: Collection<Int>) {
   if (c is List<Int>) {
     println(c.sum())
   }
+}
+
+//Kotlin generics are erased at runtime, for both functions, classes, and interfaces
+//So here, since at runtime we don't know what T is since it's erased,
+//we cannot check for the type that it is
+fun <T> isA(value: Any) = value is T
+
+//This problem can be avoided by using inline functions.
+//By making a type parameter of an inline function 'reified', you will be able to refer
+//to the type arguments at runtime
+
+//Remember that making the function inline may improve performance if this function
+//uses lambdas as arguments: the lambda code can be inlined as well, so no anonymous
+//class will be created.
+
+//By declaring the isA function as inline and marking the type parameter as 'reified',
+//you can check 'value' to see if it's an instance of 'T' at runtime
+inline fun <reified T> isAReified(value: Any) = value is T
+
+fun testReified1() {
+  println(isAReified<String>("abc"))
+  //prints true
+
+  println(isAReified<String>(123))
+  //prints false
+}
+
+//simplified version of filterIsInstance stdlib function that returns only items
+//in a list of the specified type
+//how this works on pg.234/261
+inline fun <reified T> filterIsInstance(list: List<*>): List<T> {
+  val destination = mutableListOf<T>()
+  for (element in list) {
+    if (element is T) { //Here it checks to see if the element is a certain type, this would not be possible without inline and reified
+      destination.add(element)
+    }
+  }
+  return destination
+}
+
+//see performance related talk on pg. 235/262
+//Even though performance is only enhanced with inlined function when using lambdas
+//as parameters. You don't always have to inline for performance, you can also inline
+//in order to use reified types.
+//If your inlined function starts getting too large though it's best to extract the portion
+//that needs inlining and make it into its own inline function
+fun testReified2(){
+  val myList = mutableListOf("Hello", 1, 5, "ten");
+
+  //returns a list containing 1 and 5
+  val listA = filterIsInstance<Number>(myList);
+
+  //returns a list containing "Hello" and "ten"
+  val listB = filterIsInstance<String>(myList);
 }
