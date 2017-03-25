@@ -1,5 +1,8 @@
 package org.learning
 
+import java.util.*
+import javax.xml.ws.Service
+
 /**
  * Created by gbaldeck on 3/18/2017.
  */
@@ -113,7 +116,7 @@ fun typeIsStar(value: Any) {
   }
 }
 
-//Note that the Kotlin compiler is smart enough to allow is checks when the corresponding
+//Note that the Kotlin compiler is smart enough to allow 'is' checks when the corresponding
 //type information is already known at compile time
 fun printSum(c: Collection<Int>) {
 //  the check whether c has type List<Int> is possible because you know
@@ -177,3 +180,115 @@ fun testReified2(){
   //returns a list containing "Hello" and "ten"
   val listB = filterIsInstance<String>(myList);
 }
+
+//How to represent a Java class
+val serviceImpl = ServiceLoader.load(Service::class.java)
+
+//Now with reified types
+inline fun <reified T> loadService(): ServiceLoader<T> {
+  return ServiceLoader.load(T::class.java)
+}
+
+//Now we can do the same thing like this, looks much nicer
+val reifiedServiceImpl = loadService<Service>()
+
+//How you CAN use reified type parameters:
+// In type checks and casts (is, !is, as, as?)
+// To use the Kotlin reflection APIs, as we’ll discuss in chapter 10 (::class)
+// To get the corresponding java.lang.Class (::class.java)
+// As a type argument to call other functions
+
+//How you CAN'T use reified type parameters:
+// Create new instances of the class specified as a type parameter
+// Call methods on the companion object of the type parameter class
+// Use a non-reified type parameter as a type argument when calling a function
+//    with a reified type parameter
+// Mark type parameters of classes, properties, or non-inline functions as reified
+
+//Remember if you need to un-inline lambdas in an inline function you can use the
+//'noninline' modifier
+
+//Is it safe to pass a list of strings to a function that expects a list of Any objects?
+//It’s not safe if the function adds or replaces elements in the list, because this
+//creates the possibility of type inconsistencies. It’s safe otherwise.
+
+//pg. 238/265 Subtypes and SuperTypes
+//A non-null type is a subtype of its nullable version
+//For example String is a subtype of String?
+
+//pg 240/267 Definition of invariant and covariant
+
+//A covariant class is a generic class (we’ll use Producer<T> as an example) for which
+//the following holds: Producer<A> is a subtype of Producer<B> if A is a subtype of B.
+//We say that the subtyping is preserved.
+
+//Use the 'out' keyword before the name of the type parameter to declare the class
+//as covariant
+interface CovariantProducer<out T> {
+  fun produce(): T
+}
+
+//Example of Covariance
+open class Animal {
+  fun feed() {  }
+}
+
+//Constructor parameters are in neither the in nor the out position. Even if a type
+//parameter is declared as out, you can still use it in a constructor parameter
+//declaration
+class Herd<T : Animal> (vararg animals: T) {
+  val size: Int
+    get() = herd.size
+
+  private val herd = mutableListOf(*animals) //spread operator
+
+  operator fun get(i: Int): T = herd[i]
+}
+
+fun feedAll(animals: Herd<Animal>) {
+  for (i in 0 until animals.size) {
+    animals[i].feed()
+  }
+}
+
+class Cat : Animal() {
+  fun cleanLitter() {  }
+}
+fun takeCareOfCats(cats: Herd<Cat>) {
+  for (i in 0 until cats.size) {
+    cats[i].cleanLitter()
+    feedAll(cats) //inferred type is Herd<Cat> but Herd<Animal> is expected, so we use 'out' on 'T' in 'Herd' to fix that
+  }
+}
+
+//Because no variance modifier like 'out' was used on the type 'T' parameter
+//on the 'Herd' class, the herd of cats isn't a subclass of the herd of animals.
+//Using an explicit cast would fix it, but its not ideal. Its error prone and verbose.
+
+//pg. 241/268 for explanation of 'in' and 'out' variance
+//Given a class that declared type parameter T and has a function that uses T
+//If T is used as a return type of a function the it's in the 'out' position
+//If T is used as the type of a function parameter, then it's in the 'in' position
+
+
+//The concept of contravariance can be thought of as a mirror to covariance: for a contravariant
+//class, the subtyping relation is the opposite of the subtyping relations of
+//classes used as its type arguments.
+
+interface ContraComparator<in T> {
+  fun compare(e1: T, e2: T): Int { return 1 } //'T' is used only in the 'in' positions
+}
+
+//Here both Contra and Co Variant are used
+interface Function1<in P, out R> {
+  operator fun invoke(p: P): R
+}
+
+fun enumerateCats(f: (Cat) -> Number) {  }
+fun Animal.getIndex(): Int = 1
+
+fun animTest() {
+//  This code is legal in Kotlin. Animal is a supertype of Cat, and Int is a subtype of Number.
+  enumerateCats(Animal::getIndex)
+}
+
