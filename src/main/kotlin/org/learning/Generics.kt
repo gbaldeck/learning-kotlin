@@ -208,6 +208,9 @@ val reifiedServiceImpl = loadService<Service>()
 //Remember if you need to un-inline lambdas in an inline function you can use the
 //'noninline' modifier
 
+//pg.237/264
+//'Variance' describes how types with the same base type and different type arguments relate to each other.
+
 //Is it safe to pass a list of strings to a function that expects a list of Any objects?
 //It’s not safe if the function adds or replaces elements in the list, because this
 //creates the possibility of type inconsistencies. It’s safe otherwise.
@@ -220,7 +223,8 @@ val reifiedServiceImpl = loadService<Service>()
 
 //A covariant class is a generic class (we’ll use Producer<T> as an example) for which
 //the following holds: Producer<A> is a subtype of Producer<B> if A is a subtype of B.
-//We say that the subtyping is preserved.
+//We say that the subtyping is preserved. The List interface is an example because
+//it is read-only
 
 //Use the 'out' keyword before the name of the type parameter to declare the class
 //as covariant
