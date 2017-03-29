@@ -83,7 +83,7 @@ fun ignoreNulls(s: String?) {
   println(sNotNull.length)
 }
 
-//do do multiple !! assertions on the same line\
+//do not do multiple !! assertions on the same line\
 //you won't be able to tell which value is null
 //person.company!!.address!!.country
 

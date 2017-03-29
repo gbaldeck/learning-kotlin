@@ -2,6 +2,7 @@ package org.learning
 
 import java.util.*
 import javax.xml.ws.Service
+import kotlin.reflect.KClass
 
 /**
  * Created by gbaldeck on 3/18/2017.
@@ -363,4 +364,29 @@ fun testStarProj(){
   unknownElements.add(42)
 
   println(unknownElements.first())
+}
+
+//Star projection only works if you aren't interested in the exact value of the generic type parameter
+//and you only use methods that produce values who's type you don't care about
+
+interface FieldValidator<in T> {
+  fun validate(input: T): Boolean
+}
+
+//The FieldValidator interface above could be prone to errors if storing validators in a map
+//By encapsulating the map in this object we can handle all these errors and implementation
+//In this Validators object
+//Explanation on pg. 251/278
+object Validators {
+  private val validators = mutableMapOf<KClass<*>, FieldValidator<*>>()
+
+  fun <T: Any> registerValidator(kClass: KClass<T>, fieldValidator: FieldValidator<T>) {
+    validators[kClass] = fieldValidator
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  operator fun <T: Any> get(kClass: KClass<T>): FieldValidator<T> =
+      validators[kClass] as? FieldValidator<T>
+          ?: throw IllegalArgumentException(
+          "No validator for ${kClass.simpleName}")
 }
