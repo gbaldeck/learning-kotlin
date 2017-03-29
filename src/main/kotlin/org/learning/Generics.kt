@@ -296,3 +296,71 @@ fun animTest() {
   enumerateCats(Animal::getIndex)
 }
 
+//All of the variance described above with the 'in' and 'out' keywords is called
+//declaration-site variance
+
+//The examples below are use-site variance which is closer to how Java handle variance.
+
+//This shows how the type parameter T has an upperbound R meaning T is a subtype of R
+//So this function is saying that any source list that contains subtypes of the
+//destination list can be inserted into the destination list
+fun <T: R, R> copyData(source: MutableList<T>, destination: MutableList<R>) {
+  for (item in source) {
+    destination.add(item)
+  }
+}
+
+//this fun is using site-variance in the kotlin way
+//By using the 'out' keyword, this says that any type T and its subtypes in the
+//source list can be passed into the destination list of type T. This is basically
+//the same thing as above
+fun <T> copyDataKtStyle(source: MutableList<out T>, destination: MutableList<T>) {
+  for (item in source) {
+    destination.add(item)
+  }
+}
+
+fun testSiteVar(){
+  val catList = mutableListOf<Cat>()
+  val animList = mutableListOf<Animal>()
+
+  //because of the 'out' variance modifier on the source list we can pass
+  //Lists containing animals and any of its subtypes as the source list
+  copyDataKtStyle(catList, animList)
+  copyDataKtStyle(animList, animList)
+
+  //However, we cannot swap the catList and animList
+  copyDataKtStyle(animList, catList)
+}
+
+//You can specify a variance modifier on any usage of a type parameter in a type declaration:
+//for a parameter type, local variable type, function return type, and so on.
+fun testLocalVarianceVar(){
+  val list: MutableList<out Number> = mutableListOf()
+  list.add(42) //for this list the Number type can only be used in the 'out' position
+}
+
+//In this example things are reversed. The destination list can be a list of T or any of its
+//super types
+fun <T> copyDataReverse(source: MutableList<T>, destination: MutableList<in T>) {
+  for (item in source) {
+    destination.add(item)
+  }
+}
+
+//Using star-projection syntax instead of a type argument
+//Important to note that List<Any?> is not the same as List<*>
+//The former can contain multiple of any types including null
+//The latter can contain only one type and we're not sure what tha type is
+
+fun testStarProj(){
+  val list: MutableList<Any?> = mutableListOf('a', 1, "qwe", null)
+  val chars = mutableListOf('a', 'b', 'c')
+  val unknownElements: MutableList<*> = if (Random().nextBoolean()) list else chars
+
+  //This error happens because MutableList<*> is treated as MutableList<out Any?>
+  //So Any? can only be used in the out position of the MutableList, making it immutable
+  unknownElements.add(42)
+
+  println(unknownElements.first())
+}
