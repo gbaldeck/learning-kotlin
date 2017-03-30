@@ -22,3 +22,17 @@ package org.learning
 //which tells the compiler that the property is a compile-time constant.
 const val TEST_TIMEOUT = 100L
 @Test(timeout = TEST_TIMEOUT) fun testMethod() {  }
+
+//Use-site targets are used to specify where the annotation should be applied
+//For example a getter, setter, or constructor
+@get:Rule //@get applies the target to a getter only
+
+class HasTempFolder {
+  @get:Rule //Here it's saying to only apply the @Rule annotation to the getter of the property
+  val folder = TemporaryFolder()
+  @Test
+  fun testUsingTempFolder() {
+    val createdFile = folder.newFile("myfile.txt")
+    val createdFolder = folder.newFolder("subfolder")
+  }
+}
