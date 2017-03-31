@@ -1,5 +1,7 @@
 package org.learning
 
+import kotlin.reflect.KClass
+
 /**
  * Created by gbaldeck on 3/29/2017.
  */
@@ -38,3 +40,52 @@ class HasTempFolder {
     val createdFolder = folder.newFolder("subfolder")
   }
 }
+
+//Declaring annotations
+//Annotations classes do not contain a body because it is only the representation
+//of the metadata structure associated with declarations and expressions
+annotation class JsonExclude1(val name: String)
+
+//Meta-annotations are annotations that can be applied to annotations classes
+//The @Target meta-annaotations is used to specify the valid targets of an annotation
+@Target(AnnotationTarget.PROPERTY)
+annotation class JsonExclude2
+
+//To define your own meta-annotation use ANNOTATION_CLASS
+@Target(AnnotationTarget.ANNOTATION_CLASS)
+annotation class BindingAnnotation
+@BindingAnnotation
+annotation class MyBinding
+
+//Using a class as an annotation parameter
+annotation class DeserializeInterface(val targetClass: KClass<out Any>)
+
+interface CompanyAnno {
+  val name: String
+}
+
+data class CompanyImplAnno(override val name: String) : CompanyAnno
+
+data class PersonAnno(
+    val name: String,
+    @DeserializeInterface(CompanyImplAnno::class) val company: CompanyAnno
+)
+
+//pg.263/290 Generic classes as annotation parameters
+//Whenever you need to use a class as an annotation argument do it like this
+//explained on pg 263/290
+
+//only use the <*> if your class takes a type argument
+annotation class YourAnnotation(
+    val yourProperty: KClass<out YourClass<*>>
+)
+
+//example
+interface ValueSerializer<T> {
+  fun toJsonValue(value: T): Any?
+  fun fromJsonValue(jsonValue: Any?): T
+}
+
+annotation class CustomSerializer(
+    val serializerClass: KClass<out ValueSerializer<*>>
+)
