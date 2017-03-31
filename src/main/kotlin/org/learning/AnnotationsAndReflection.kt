@@ -25,6 +25,8 @@ const val TEST_TIMEOUT = 100L
 
 //Use-site targets are used to specify where the annotation should be applied
 //For example a getter, setter, or constructor
+//pg. 257/284 Has the full list of supported use-site targets
+
 @get:Rule //@get applies the target to a getter only
 
 class HasTempFolder {
