@@ -1,6 +1,7 @@
 package org.learning
 
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction2
 
 /**
  * Created by gbaldeck on 3/29/2017.
@@ -89,3 +90,28 @@ interface ValueSerializer<T> {
 annotation class CustomSerializer(
     val serializerClass: KClass<out ValueSerializer<*>>
 )
+
+class PersonBasic(val name: String, val age: Int)
+
+fun reflectionExamples1(){
+  //get a class at runtime
+  val person = PersonBasic("Alice", 29)
+  val kClass = person.javaClass.kotlin //same as person::class
+
+  //returns a lists of KCallables which have the function call(varargs args:Any?)
+  kClass.members.forEach { println(it.name) }
+
+  //calling a function with reflection
+  fun foo(x: Int) = println(x)
+  val kFunction = ::foo
+  kFunction.call(42)
+
+  //use KFunction1, KFunction2, and so on to catch errors with arguments at compile time
+  //They are synthetic compiler-generated types and don't exist until runtime.
+  //Since they are auto-generated you can use them for functions with any number of arguments
+  fun sum(x: Int, y: Int) = x + y
+  val kFunction2: KFunction2<Int, Int, Int> = ::sum
+  println(kFunction2.invoke(1, 2) + kFunction2(3, 4))
+  kFunction2(1)
+}
+
