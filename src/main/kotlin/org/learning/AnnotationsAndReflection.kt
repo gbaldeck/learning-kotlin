@@ -1,7 +1,8 @@
 package org.learning
 
-import kotlin.reflect.KClass
-import kotlin.reflect.KFunction2
+import java.util.*
+import kotlin.reflect.*
+import kotlin.reflect.full.createInstance
 
 /**
  * Created by gbaldeck on 3/29/2017.
@@ -24,7 +25,8 @@ import kotlin.reflect.KFunction2
 //To use a property as an annotation argument, you need to mark it with a const modifier,
 //which tells the compiler that the property is a compile-time constant.
 const val TEST_TIMEOUT = 100L
-@Test(timeout = TEST_TIMEOUT) fun testMethod() {  }
+
+@Test(timeout = TEST_TIMEOUT) fun testMethod() {}
 
 //Use-site targets are used to specify where the annotation should be applied
 //For example a getter, setter, or constructor
@@ -35,6 +37,7 @@ const val TEST_TIMEOUT = 100L
 class HasTempFolder {
   @get:Rule //Here it's saying to only apply the @Rule annotation to the getter of the property
   val folder = TemporaryFolder()
+
   @Test
   fun testUsingTempFolder() {
     val createdFile = folder.newFile("myfile.txt")
@@ -55,6 +58,7 @@ annotation class JsonExclude2
 //To define your own meta-annotation use ANNOTATION_CLASS
 @Target(AnnotationTarget.ANNOTATION_CLASS)
 annotation class BindingAnnotation
+
 @BindingAnnotation
 annotation class MyBinding
 
@@ -68,8 +72,8 @@ interface CompanyAnno {
 data class CompanyImplAnno(override val name: String) : CompanyAnno
 
 data class PersonAnno(
-    val name: String,
-    @DeserializeInterface(CompanyImplAnno::class) val company: CompanyAnno
+  val name: String,
+  @DeserializeInterface(CompanyImplAnno::class) val company: CompanyAnno
 )
 
 //pg.263/290 Generic classes as annotation parameters
@@ -78,7 +82,7 @@ data class PersonAnno(
 
 //only use the <*> if your class takes a type argument
 annotation class YourAnnotation(
-    val yourProperty: KClass<out YourClass<*>>
+  val yourProperty: KClass<out YourClass<*>>
 )
 
 //example
@@ -88,12 +92,12 @@ interface ValueSerializer<T> {
 }
 
 annotation class CustomSerializer(
-    val serializerClass: KClass<out ValueSerializer<*>>
+  val serializerClass: KClass<out ValueSerializer<*>>
 )
 
-class PersonBasic(val name: String, val age: Int)
+class PersonBasic(val name: String, var age: Int)
 
-fun reflectionExamples1(){
+fun reflectionExamples1() {
   //get a class at runtime
   val person = PersonBasic("Alice", 29)
   val kClass = person.javaClass.kotlin //same as person::class
@@ -103,6 +107,7 @@ fun reflectionExamples1(){
 
   //calling a function with reflection
   fun foo(x: Int) = println(x)
+
   val kFunction = ::foo
   kFunction.call(42)
 
@@ -110,8 +115,102 @@ fun reflectionExamples1(){
   //They are synthetic compiler-generated types and don't exist until runtime.
   //Since they are auto-generated you can use them for functions with any number of arguments
   fun sum(x: Int, y: Int) = x + y
+
   val kFunction2: KFunction2<Int, Int, Int> = ::sum
   println(kFunction2.invoke(1, 2) + kFunction2(3, 4))
   kFunction2(1)
+
+  //reflection with properties
+  //returns a KProperty0 interface with setter and get methods
+  val kProperty = person::age
+  kProperty.setter.call(21)
+  println(kProperty.get())
+
+  //a member property is represented by KProperty1 interface and has a
+  //one-argument get method. To access the value, you must provide the
+  //object instance for which you need the value.
+  val memberProperty = PersonBasic::age
+  println(memberProperty.get(person))
+  //prints 29
+
+
 }
 
+//Use private to make sure that this extention function is only available in this
+//particular context
+private fun StringBuilder.serializeObject1(obj: Any) {
+  val kClass = obj.javaClass.kotlin
+  val properties = kClass.memberProperties
+  properties.joinToStringBuilder(this, prefix = "{", postfix = "}")
+  {
+    prop ->
+    serializeString(prop.name)
+    append(": ")
+    serializePropertyValue(prop.get(obj))
+  }
+}
+
+//delegates to serializeObject extention function
+//buildString creates a stringBuilder and returns its toString()
+fun serialize(obj: Any): String = buildString { serializeObject1(obj) }
+
+
+//this function finds the specified annotation in the list of annotations
+//for a KAnnotatedElement
+inline fun <reified T> KAnnotatedElement.findAnnotation(): T?
+  = annotations.filterIsInstance<T>().firstOrNull()
+
+private fun StringBuilder.serializeObject2(obj: Any) {
+  val kClass = obj.javaClass.kotlin
+
+  //creates a list of all properties that do not have the JsonExclude annotation
+  val properties = kClass.memberProperties
+    .filter { it.findAnnotation<JsonExclude>() == null }
+
+
+
+  properties.joinToStringBuilder(this, prefix = "{", postfix = "}")
+  {
+    prop ->
+    //finds the JsonName annotation or null
+    val jsonNameAnno = prop.findAnnotation<JsonName>()
+    //if the JsonName annotation exists then return name else return prop.name
+    val propName = jsonNameAnno?.name ?: prop.name
+    serializeString(propName)
+    append(": ")
+    serializePropertyValue(prop.get(obj))
+  }
+}
+
+//customSerializer example again but with annotations
+fun customSerializer(){
+  annotation class CustomSerializer(
+    val serializerClass: KClass<out ValueSerializer<*>>
+  )
+
+  class DateSerializer: ValueSerializer<Date>{
+    override fun fromJsonValue(jsonValue: Any?): Date = Date()
+    override fun toJsonValue(value: Date): Any? = null
+  }
+
+  data class PersonS(
+    val name: String,
+    @CustomSerializer(DateSerializer::class) val birthDate: Date
+  )
+
+  fun KProperty<*>.getSerializer(): ValueSerializer<Any?>? {
+
+    //Since KProperty extends KAnnotatedElement we can use findAnnotation to find
+    //the CustomSerializer annotation and if it doesn't exist then return from the function
+    val customSerializerAnno = findAnnotation<CustomSerializer>() ?: return null
+
+    //Gets the serializerClass property from the CustomSerializer annotation
+    val serializerClass = customSerializerAnno.serializerClass
+
+    //if the class is an object it gets its instance, if not it creates a new instance of the class
+    val valueSerializer = serializerClass.objectInstance ?: serializerClass.createInstance()
+
+    @Suppress("UNCHECKED_CAST")
+    return valueSerializer as ValueSerializer<Any?>
+  }
+}
