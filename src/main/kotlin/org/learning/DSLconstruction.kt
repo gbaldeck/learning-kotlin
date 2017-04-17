@@ -2,6 +2,8 @@ package org.learning
 
 import kotlinx.html.*
 import kotlinx.html.stream.createHTML
+import java.time.LocalDate
+import java.time.Period
 
 /**
  * Created by gbaldeck on 4/11/2017.
@@ -316,6 +318,34 @@ fun testChaninedInfix(){
   "kotlin" should start with "kot"
 }
 
+//now using extention properties for a different dsl on dates
+val Int.days: Period
+  get() = Period.ofDays(this)
+
+val Period.ago: LocalDate
+  get() = LocalDate.now() - this
+
+val Period.fromNow: LocalDate
+  get() = LocalDate.now() + this
+
+
+fun testDateDsl(){
+  println(1.days.ago)
+  println(1.days.fromNow)
+
+}
+
+//pg. 308/335
+//for making extention functions scoped you can do this
+fun Table.select(where: SqlExpressionBuilder.() -> Op<Boolean>) : Query
+object SqlExpressionBuilder {
+  //this infix function can only be used in the context of the //sql expression builder object
+  infix fun<T> Column<T>.eq(t: T) : Op<Boolean>
+
+}
+val result = (Country join Customer)
+    .select { Country.name eq "USA" } //this line is possible because of the SqlExpressionBuilder
+result.forEach { println(it[Customer.name]) }
 
 
 //my own test
