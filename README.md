@@ -1,2 +1,2 @@
 # learning-kotlin
-An project for learning Kotlin.
+Notes from every chapter of the Kotlin in Action book.
